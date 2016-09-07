@@ -3,43 +3,32 @@ var router = express.Router();
 var request = require('request');
 var cheerio = require('cheerio')
 
-// var jsdom = require("jsdom").jsdom;
-// var doc = jsdom();
-// var window = doc.defaultView;
+Date.prototype.yyyymmdd = function() {
+  var mm = this.getMonth() + 1; // getMonth() is zero-based
+  var dd = this.getDate();
 
-// // Load jQuery with the simulated jsdom window.
-// var $ = require('jquery')(window);
+  return [this.getFullYear(), !mm[1] && '0', mm, !dd[1] && '0', dd].join(''); // padding
+};
 
-// var RequestClass = function() {
-// 	var html; 
-	
-// }; 
-
-// // // ...add a method, which we do in this example:
-// // RequestClass.prototype.getList = function() {
-// //     return "My List";
-// // };
-
-// // now expose with module.exports:
-// exports.Request = RequestClass;
-/* GET home page. */
 router.get('/', function(req, res, next) {
-	var html = '';
-	request('http://www.kerteminde-tennisklub.dk/Activity/BookingView/Activity2520714441261358577?callback=?', function (error, response, body) {
+	var date = new Date()
+	request.post('http://www.kerteminde-tennisklub.dk/Activity/BookingSheet', {form: {activity:'Activity2520714441261358577', days: '7', date: date.yyyymmdd()}},function (error, response, body) {
 		if (!error && response.statusCode == 200) {
-			// html = JSON.stringify(body);
-			html = body
-			console.log("yo mane", html);
+			console.log("reached")
+			var index = 0;
+			$ = cheerio.load(body)
+			$('div').find('[data-bookings^="<b>Bane"]').each(()=>{
+				index++
+			})
+			console.log("Courts available this week-", index)
+			res.render('index', {title: "Time slots available this week at Kerteminde Tennis Club", index});
+		}
+		else{
+			console.log("ajax call failed")
+			res.render('index', {title: 'Availability at Kerteminde Tennis Club is not available'});			
 		}
 	})
-	var index = 0;
-	$ = cheerio.load(html)
-	console.log("cheerio yo", $, "document yo", $('document'))
-	$('[data-bookings^="<b>Bane"]').each((div)=>{
-		index++
-	})
-	console.log("Index yo",index)
-	res.render('index', { title: 'WannaSport', index});
+	
 });
 
 module.exports = router;
