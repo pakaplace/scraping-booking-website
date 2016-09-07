@@ -35,7 +35,7 @@ router.get('/', function(req, res, next) {
 	var index = 0;
 	$ = cheerio.load(html)
 	console.log("cheerio yo", $, "document yo", $('document'))
-	$('div').each((div)=>{
+	$('[data-bookings^="<b>Bane"]').each((div)=>{
 		index++
 	})
 	console.log("Index yo",index)
